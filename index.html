@@ -1,0 +1,228 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#0b2f6b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="VKVTT">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>VKV Nalbari Timetable</title><link rel="stylesheet" href="v66-home.css?v=66.0-home-fix-1"><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script>
+(function(){
+  const CURRENT_APP_VERSION = '66.0';
+  try{
+    const u=new URL(window.location.href);
+    if(u.searchParams.get('v')!==CURRENT_APP_VERSION){
+      u.searchParams.set('v',CURRENT_APP_VERSION);
+      history.replaceState(null,'',u.pathname+u.search+u.hash);
+    }
+  }catch(_){}
+})();
+</script>
+
+<link rel="stylesheet" href="v66-design-system.css?v=66.0-school-identity-1"><script src="v66-ui.js?v=66.0-school-identity-1" defer></script><script src="period-notifications.js?v=66.2" defer></script>
+</head><body><div id="authGate"><div class="authCard">
+<h2>VKV Nalbari Timetable</h2><p id="authLead">Authorised staff sign-in · Cloud v66.0</p>
+<div id="authMessage" class="authInfo">Checking sign-in status…</div>
+<div class="authActions"><button id="googleSignIn">Sign in with Google</button><button id="googleSwitchAccount">Use another Google account</button><button id="copySetupUid" style="display:none">Copy UID</button><button id="authSignOut" style="display:none">Sign out</button></div>
+</div></div>
+<div id="cloudBar"><div class="cloudInner"><div class="cloudTechnical" aria-hidden="true"><span class="cloudBadge">Firebase Cloud</span> <span id="cloudUser"></span><span id="cloudSync" class="cloudSync">Connecting…</span></div><div style="display:flex;gap:7px;flex-wrap:wrap"><button id="cloudSwitchAccount" class="cloudBtn">Use another Google account</button><button id="cloudSignOut" class="cloudBtn">Sign out</button></div></div></div>
+<header><div class="wrap head"><img class="logo" src="school-logo.jpg?v=66.0-home-fix-1" alt="Vivekananda Kendra Vidyalaya, Nalbari logo" width="50" height="70"><div class="homeTitleBlock"><h1>VKV Nalbari Timetable</h1><small>Session 2026–27</small></div><img class="swamijiHomePortrait" src="swamiji-gold.svg?v=66.2" alt="Swami Vivekananda line portrait"></div></header>
+<main class="wrap"><div id="activeScheduleBanner" class="activeScheduleBanner">🗓 Active Schedule: loading…</div>
+<div id="myAreaTitle" class="myAreaTitle">My Area</div>
+<div id="myAreaGrid" class="myGrid">
+<button id="myTimetableBtn" onclick="openMyTimetable(this)">📘 My Timetable</button>
+<button id="myProxyTodayBtn" onclick="openMyProxyToday(this)">👥 My Proxy Today <span id="myProxyBadge" class="myBadge" style="display:none"></span></button>
+<button id="myProxyHistoryBtn" onclick="openMyProxyHistory(this)">🕘 My Past Proxy History</button>
+<button id="myStatusBtn" onclick="openMyStatus(this)">🗂 My Leave &amp; Duty Leave</button>
+<button id="myAttendanceBtn" onclick="location.href='attendance.html?v=66.0'">📍 My Attendance</button>
+</div>
+<div class="nav">
+<button onclick="show('teacher',this)">👨‍🏫 Teacher Wise</button><button onclick="show('class',this)">🏫 Class Wise</button><button onclick="show('day',this)">📅 Day Wise</button>
+</div><div class="homebar"><button onclick="resetHome()">🏠 Home / Reset View</button><button id="annualCalendarBtn" style="display:none" onclick="location.href='annual-calendar-2026-27.html?v=66.0'">🗓 Annual Calendar</button><button id="historyBtn" onclick="show('history',this);renderHistory()">📚 History</button><button id="approvedLeaveBtn" class="leaveRegisterLink" onclick="openApprovedLeaveRegister()">🗂 Approved Leave</button><button id="adminUserAccessBtn" class="adminOnlyLink" onclick="openAdminDashboard()">⚙️ Admin Dashboard</button></div>
+<div class="opsTitle">Daily Management</div>
+<div class="opsGrid">
+<button id="leaveOpsBtn" onclick="show('leave',this)">📝 Leave / Duty Leave / Vacant</button>
+<button id="proxyWorkBtn" onclick="openProxyAllotment(this)">👥 Proxy Allotment</button>
+<button id="publishedProxyBtn" onclick="openPublishedProxy(this)">✅ Today’s Proxy Allotment (All Teachers)</button>
+<button onclick="show('free',this)">🕐 Free Teachers</button>
+<button onclick="show('now',this)">📍 Where Now?</button>
+</div>
+
+
+
+<section id="myTimetable" class="view">
+<h2>My Timetable</h2>
+<div id="myTimetableIdentity" class="myIdentity"></div>
+<div class="myModeBtns">
+<button id="myTodayModeBtn" class="active" onclick="renderMyTimetable('today',this)">Today</button>
+<button id="myWeekModeBtn" onclick="renderMyTimetable('week',this)">Full Week</button>
+</div>
+<div id="myTimetableResult" class="result">Opening your timetable…</div>
+</section>
+
+<section id="myProxyToday" class="view">
+<h2>My Proxy Today</h2>
+<div id="myProxyTodayIdentity" class="myIdentity"></div>
+<div id="myProxyTodayResult" class="result">Checking today’s published proxy allotment…</div>
+</section>
+
+<section id="myProxyHistory" class="view">
+<h2>My Past Proxy History</h2>
+<div id="myProxyHistoryIdentity" class="myIdentity"></div>
+<div class="controls">
+<div><label>From Date (dd/mm/yyyy)</label><input type="text" inputmode="numeric" maxlength="10" placeholder="dd/mm/yyyy" id="myProxyHistoryFrom"></div>
+<div><label>To Date (dd/mm/yyyy)</label><input type="text" inputmode="numeric" maxlength="10" placeholder="dd/mm/yyyy" id="myProxyHistoryTo"></div>
+</div>
+<div class="actions"><button onclick="loadMyProxyHistory()">🔎 Show History</button><span id="myProxyHistoryMsg" class="copymsg"></span></div>
+<div id="myProxyHistoryResult" class="result">Choose a date range or leave From Date blank to see all available past published proxy records.</div>
+</section>
+
+<section id="myStatus" class="view">
+<h2>My Leave &amp; Duty Leave</h2><div class="small">All approved records linked to your account are shown here — past, current and future.</div>
+<div id="myStatusIdentity" class="myIdentity"></div>
+<div class="small">Only school-saved records linked to your authorised Google account are shown here. Vacant-position records are not included.</div>
+<div class="actions"><button onclick="loadMyStatus()">↻ Refresh</button><span id="myStatusMsg" class="copymsg"></span></div>
+<div id="myStatusResult" class="result">Loading your approved Leave and Duty Leave records…</div>
+</section>
+
+<section id="teacher" class="view"><h2>Teacher Wise</h2><div class="controls"><div><label>Teacher</label><select id="teacherSel" onchange="teacherResult()"><option value="">Select...</option></select></div><div><label>Day</label><select id="teacherDay" onchange="teacherResult()"><option value="">All</option><option value="Monday">Monday</option><option value="Tuesday">Tuesday</option><option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option><option value="Friday">Friday</option><option value="Saturday">Saturday</option></select></div><div><label>Period</label><select id="teacherPeriod" onchange="teacherResult()"><option value="">All</option><option value="1">1st Period · 8:35–9:25</option><option value="2">2nd Period · 9:25–10:05</option><option value="3">3rd Period · 10:05–10:45</option><option value="4">4th Period · 10:45–11:25</option><option value="5">5th Period · 11:55–12:35</option><option value="6">6th Period · 12:35–1:15</option><option value="7">7th Period · 1:15–1:45 Jr / 1:55 Sr</option><option value="8">8th Period · 1:55–2:35</option></select></div></div><div class="actions"><button onclick="copyView('teacherResult','Teacher-wise timetable')">📋 Copy</button><button onclick="shareView('teacherResult','Teacher-wise timetable')">↗ Share</button><span id="teacherResultMsg" class="copymsg"></span></div><div id="teacherResult" class="result">Select a teacher.</div></section>
+
+<section id="class" class="view"><h2>Class Wise</h2><div class="controls"><div><label>Class</label><select id="classSel" onchange="classResult()"><option value="">Select…</option></select></div><div><label>Day</label><select id="classDay" onchange="classResult()"><option value="">All</option><option value="Monday">Monday</option><option value="Tuesday">Tuesday</option><option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option><option value="Friday">Friday</option><option value="Saturday">Saturday</option></select></div><div><label>Period</label><select id="classPeriod" onchange="classResult()"><option value="">All</option><option value="1">1st Period · 8:35–9:25</option><option value="2">2nd Period · 9:25–10:05</option><option value="3">3rd Period · 10:05–10:45</option><option value="4">4th Period · 10:45–11:25</option><option value="5">5th Period · 11:55–12:35</option><option value="6">6th Period · 12:35–1:15</option><option value="7">7th Period · 1:15–1:45 Jr / 1:55 Sr</option><option value="8">8th Period · 1:55–2:35</option></select></div></div><div class="actions"><button onclick="copyView('classResult','Class-wise timetable')">📋 Copy</button><button onclick="shareView('classResult','Class-wise timetable')">↗ Share</button><span id="classResultMsg" class="copymsg"></span></div><div id="classResult" class="result">Select a class.</div></section>
+
+<section id="day" class="view"><h2>Day Wise</h2>
+<div class="controls">
+<div><label>Day</label><select id="daySel" onchange="dayResult()"><option value="">Select…</option><option value="Monday">Monday</option><option value="Tuesday">Tuesday</option><option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option><option value="Friday">Friday</option><option value="Saturday">Saturday</option></select></div>
+<div><label>Period</label><select id="dayPeriod" onchange="dayResult()"><option value="">All</option><option value="1">1st Period</option><option value="2">2nd Period</option><option value="3">3rd Period</option><option value="4">4th Period</option><option value="5">5th Period</option><option value="6">6th Period</option><option value="7">7th Period</option><option value="8">8th Period</option></select></div>
+<div><label>Class</label><select id="dayClass" onchange="dayResult()"><option value="">All</option></select></div>
+</div>
+<div class="actions"><button onclick="copyView('dayResult','Day-wise timetable')">📋 Copy</button><button onclick="shareView('dayResult','Day-wise timetable')">↗ Share</button><span id="dayResultMsg" class="copymsg"></span></div>
+<div id="dayResult" class="result">Select a day. Period and Class are optional filters.</div></section>
+
+<section id="free" class="view"><h2>Free Teachers</h2><div class="controls"><div><label>Day</label><select id="freeDay" onchange="freeResult()"><option value="">Select…</option><option value="Monday">Monday</option><option value="Tuesday">Tuesday</option><option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option><option value="Friday">Friday</option><option value="Saturday">Saturday</option></select></div><div><label>Period</label><select id="freePeriod" onchange="freeResult()"><option value="">Select…</option><option value="1">1st Period · 8:35–9:25</option><option value="2">2nd Period · 9:25–10:05</option><option value="3">3rd Period · 10:05–10:45</option><option value="4">4th Period · 10:45–11:25</option><option value="5">5th Period · 11:55–12:35</option><option value="6">6th Period · 12:35–1:15</option><option value="7">7th Period · 1:15–1:45 Jr / 1:55 Sr</option><option value="8">8th Period · 1:55–2:35</option></select></div></div><div class="actions"><button onclick="copyView('freeResult','Free teachers')">📋 Copy</button><button onclick="shareView('freeResult','Free teachers')">↗ Share</button><span id="freeResultMsg" class="copymsg"></span></div><div id="freeResult" class="result">Select day and period.</div></section>
+
+<section id="now" class="view"><h2>Where Is a Teacher Now?</h2><div id="clock" class="result"></div><div class="controls" style="margin-top:12px"><div><label>Teacher</label><select id="nowTeacher" onchange="nowResult()"><option value="">Select...</option></select></div><div><label>Day</label><select id="nowDay" onchange="nowResult()"><option value="">Select…</option><option value="Monday">Monday</option><option value="Tuesday">Tuesday</option><option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option><option value="Friday">Friday</option><option value="Saturday">Saturday</option></select></div><div><label>Period</label><select id="nowPeriod" onchange="nowResult()"><option value="">Select…</option><option value="1">1st Period · 8:35–9:25</option><option value="2">2nd Period · 9:25–10:05</option><option value="3">3rd Period · 10:05–10:45</option><option value="4">4th Period · 10:45–11:25</option><option value="5">5th Period · 11:55–12:35</option><option value="6">6th Period · 12:35–1:15</option><option value="7">7th Period · 1:15–1:45 Jr / 1:55 Sr</option><option value="8">8th Period · 1:55–2:35</option></select></div></div><div class="actions"><button onclick="copyView('nowResult','Teacher location')">📋 Copy</button><button onclick="shareView('nowResult','Teacher location')">↗ Share</button><span id="nowResultMsg" class="copymsg"></span></div><div id="nowResult" class="result">Select a teacher. Day and period are set automatically when possible.</div></section>
+
+<section id="slot" class="view"><h2>Whose Period Is It?</h2><div class="controls"><div><label>Class</label><select id="slotClass" onchange="slotResult()"><option value="">Select…</option></select></div><div><label>Day</label><select id="slotDay" onchange="slotResult()"><option value="">Select…</option><option value="Monday">Monday</option><option value="Tuesday">Tuesday</option><option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option><option value="Friday">Friday</option><option value="Saturday">Saturday</option></select></div><div><label>Period</label><select id="slotPeriod" onchange="slotResult()"><option value="">Select…</option><option value="1">1st Period · 8:35–9:25</option><option value="2">2nd Period · 9:25–10:05</option><option value="3">3rd Period · 10:05–10:45</option><option value="4">4th Period · 10:45–11:25</option><option value="5">5th Period · 11:55–12:35</option><option value="6">6th Period · 12:35–1:15</option><option value="7">7th Period · 1:15–1:45 Jr / 1:55 Sr</option><option value="8">8th Period · 1:55–2:35</option></select></div></div><div class="actions"><button onclick="copyView('slotResult','Class slot')">📋 Copy</button><button onclick="shareView('slotResult','Class slot')">↗ Share</button><span id="slotResultMsg" class="copymsg"></span></div><div id="slotResult" class="result">Select class, day and period.</div></section>
+
+<section id="allot" class="view"><h2><span id="proxyScopeTitle">Today’s</span> Proxy Allotment (All Teachers) <span class="small" id="proxyDateLabel"></span></h2>
+<div id="proxyTodayStatusSummary" class="result" style="margin-bottom:12px">Loading today’s Leave / Duty Leave / Operational Status summary…</div>
+<div class="controls"><div><label>Proxy Date (dd/mm/yyyy)</label><input type="text" inputmode="numeric" maxlength="10" placeholder="dd/mm/yyyy" id="proxyWorkDate" onchange="changeProxyWorkDate()"><div class="small">Today and the coming three days are available normally. An earlier date requires Principal authorisation.</div></div></div>
+<div class="proxyTop">
+  <button onclick="prevProxyPeriod()">← Previous</button>
+  <div><b id="proxyPeriodTitle">Period</b><div id="proxyProgress" class="small"></div></div>
+  <button onclick="nextProxyPeriod()">Next →</button>
+</div>
+<div class="controls"><div><label>Jump to Period</label><select id="allotPeriod" onchange="jumpProxyPeriod()"><option value="">Select…</option><option value="1">1st Period · 8:35–9:25</option><option value="2">2nd Period · 9:25–10:05</option><option value="3">3rd Period · 10:05–10:45</option><option value="4">4th Period · 10:45–11:25</option><option value="5">5th Period · 11:55–12:35</option><option value="6">6th Period · 12:35–1:15</option><option value="7">7th Period · 1:15–1:45 Jr / 1:55 Sr</option><option value="8">8th Period · 1:55–2:35</option></select></div></div>
+<div id="allotResult" class="result">Today's proxy requirements will appear period by period.</div>
+<div id="publishedDraftNote" class="draftNote" style="display:none"></div>
+<div class="actions"><button onclick="showAllProxyNeeds()">📋 Show All Required Proxies</button><button id="finaliseProxyBtn" onclick="finaliseProxies()">✓ Review & Finalise</button><button id="enableCorrectionBtn" style="display:none" onclick="enableProxyCorrection()">🔓 Principal: Enable Correction</button><button id="authorisePastProxyBtn" style="display:none" onclick="authoriseHistoricalProxy()">🗓 Principal: Authorise Earlier Record</button><span id="allotMsg" class="copymsg"></span></div><div id="allotReview" class="result" style="display:none"></div>
+</section>
+
+<section id="publishedProxy" class="view"><h2>Today’s Proxy Allotment (All Teachers) <span class="small" id="publishedProxyDate"></span></h2>
+<div id="publishedProxyResult" class="result">The final proxy allotment has not yet been published for today.</div>
+<div class="actions"><button onclick="copyPublishedProxy()">📋 Copy</button><button onclick="sharePublishedProxy()">↗ Share</button><button onclick="printPublishedProxy()">🖨 Print</button><span id="publishedProxyMsg" class="copymsg"></span></div>
+</section>
+
+<section id="leave" class="view"><h2>Leave / Duty Leave / Operational Status</h2>
+<div class="controls"><div><label>Teacher</label><select id="leaveTeacher" onchange="onHomepageLeaveTeacherChange()"><option value="">Select...</option></select></div></div>
+<div id="homepageLeaveSnapshot" class="proxycard" style="display:none" aria-live="polite"></div>
+
+<div class="proxycard leaveCalendarCard">
+<div class="proxyhead">1. Select date(s)</div>
+<div class="small">Past dates, future dates and long periods crossing several months are supported.</div>
+<div class="leaveDateModes">
+<button data-leave-date-mode="single" onclick="chooseLeaveDateMode('single',this)">Single Date</button>
+<button data-leave-date-mode="range" onclick="chooseLeaveDateMode('range',this)">Date Range</button>
+<button data-leave-date-mode="multiple" onclick="chooseLeaveDateMode('multiple',this)">Selected Dates</button>
+</div>
+<div class="calendarShell">
+<div class="calendarHead">
+<button id="leaveCalPrev" onclick="changeLeaveCalendarMonth(-1)" aria-label="Previous month">←</button>
+<strong id="leaveCalMonth">Calendar</strong>
+<button id="leaveCalNext" onclick="changeLeaveCalendarMonth(1)" aria-label="Next month">→</button>
+</div>
+<div class="calendarWeek"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
+<div id="leaveCalendarGrid" class="calendarGrid"></div>
+<div id="leaveRangeInputs" class="dateRangeInputs" style="display:none">
+<div><label>From Date (dd/mm/yyyy)</label><input type="text" inputmode="numeric" maxlength="10" placeholder="dd/mm/yyyy" id="leaveRangeFrom" onchange="syncLeaveRangeInputs()"></div>
+<div><label>To Date (dd/mm/yyyy)</label><input type="text" inputmode="numeric" maxlength="10" placeholder="dd/mm/yyyy" id="leaveRangeTo" onchange="syncLeaveRangeInputs()"></div>
+</div>
+<div id="leaveSelectionSummary" class="leaveSelectionSummary"></div>
+</div>
+</div>
+
+<div class="small" style="margin:12px 0 7px"><b>2. Select status:</b></div>
+<div class="leaveBtns">
+<button data-leave-type="full" onclick="chooseStatus('full',this)">Full Leave</button>
+<button data-leave-type="half" onclick="chooseStatus('half',this)">Half Leave · P5–P8</button>
+<button data-leave-type="od" onclick="chooseStatus('od',this)">Duty Leave · On Duty</button>
+<button data-leave-type="special" onclick="chooseStatus('special',this)">Duty Leave · Special Assignment</button>
+<button data-leave-type="vacant" onclick="chooseStatus('vacant',this)">Operational Status · Vacant Position</button>
+</div>
+<div id="leaveCategoryBox" class="proxycard disabledBox">
+<div class="proxyhead">3. Leave Category &amp; Leave Account</div>
+<div class="small">Required for Full Leave / Half Leave. This lets the timetable app become the leave register too, so the same leave need not be entered again in a separate Excel sheet.</div>
+<div id="leaveCategoryQuickBtns" class="leaveBtns categoryQuickBtns" style="margin-top:10px">
+<button data-leave-category="VL" onclick="chooseLeaveCategory('VL',this)">VL</button>
+<button data-leave-category="EL" onclick="chooseLeaveCategory('EL',this)">EL</button>
+<button data-leave-category="CL" onclick="chooseLeaveCategory('CL',this)">CL</button>
+<button data-leave-category="SEL" onclick="chooseLeaveCategory('SEL',this)">SEL</button>
+<button data-leave-category="EOL" onclick="chooseLeaveCategory('EOL',this)">EOL</button>
+<button data-leave-category="MATERNITY" onclick="chooseLeaveCategory('MATERNITY',this)">Maternity Leave</button>
+</div>
+<div class="controls">
+<div><label>Leave Category</label><select id="leaveCategory" onchange="refreshLeaveCategoryUi(false)"><option value="">Select…</option></select></div>
+<div><label>Leave Days</label><input id="leaveUnits" type="number" min="0" step="0.5" placeholder="Auto calculated" oninput="renderHomepageLeaveRuleWarning()"><div class="small">Auto-calculated from the selected dates; you may correct it when school leave-counting rules require a different figure.</div></div>
+</div>
+<div class="actions" style="margin-top:8px"><button type="button" onclick="autoFillLeaveUnits()">↻ Auto Calculate Leave Days</button><span id="leaveAccountHint" class="small"></span></div>
+<div id="homepageLeaveRuleWarning" class="small" style="margin-top:9px" aria-live="polite"></div>
+</div>
+<div id="dutyDurationBox" class="proxycard disabledBox">
+<div class="proxyhead">4. Duty Leave Duration · On Duty / Special Assignment</div>
+<div class="leaveBtns durationBtns">
+<button data-duration="full" onclick="chooseDutyDuration('full',this)">Full Day</button>
+<button data-duration="half" onclick="chooseDutyDuration('half',this)">Half Day · P5–P8</button>
+<button data-duration="custom" onclick="chooseDutyDuration('custom',this)">Custom Period Range</button>
+</div>
+<div class="controls">
+<div><label>From Period</label><select id="dutyFrom"><option value="">Select…</option><option value="1">1st Period · 8:35–9:25</option><option value="2">2nd Period · 9:25–10:05</option><option value="3">3rd Period · 10:05–10:45</option><option value="4">4th Period · 10:45–11:25</option><option value="5">5th Period · 11:55–12:35</option><option value="6">6th Period · 12:35–1:15</option><option value="7">7th Period · 1:15–1:45 Jr / 1:55 Sr</option><option value="8">8th Period · 1:55–2:35</option></select></div>
+<div><label>To Period</label><select id="dutyTo"><option value="">Select…</option><option value="1">1st Period · 8:35–9:25</option><option value="2">2nd Period · 9:25–10:05</option><option value="3">3rd Period · 10:05–10:45</option><option value="4">4th Period · 10:45–11:25</option><option value="5">5th Period · 11:55–12:35</option><option value="6">6th Period · 12:35–1:15</option><option value="7">7th Period · 1:15–1:45 Jr / 1:55 Sr</option><option value="8">8th Period · 1:55–2:35</option></select></div>
+<div><label>Details / Assignment</label><input id="dutyNote" placeholder="Optional details"></div>
+</div>
+<div id="durationHelp" class="small">Choose On Duty or Special Assignment first.</div>
+</div>
+<div class="actions recordActions">
+<button id="saveStatusBtn" onclick="saveStatusRecord()">💾 Save</button>
+<button id="cancelEditStatusBtn" style="display:none" onclick="cancelLeavePlanEdit()">✕ Cancel Edit</button>
+<button onclick="clearStatusForm()">↺ Clear Form</button>
+<button class="dangerBtn" onclick="deleteSelectedStatus()">🗑 Delete Selected Record</button>
+<button class="dangerBtn" onclick="deleteTodayStatuses()">🗑 Delete Today’s Manual Statuses</button>
+<span id="statusMsg" class="copymsg"></span>
+</div>
+
+<div class="proxycard">
+<div class="proxyhead">Scheduled / Date-based Entries</div>
+<div class="small">A continuous leave covering months is stored as one entry. Selected Dates can hold non-continuous leave such as 24th, 27th and 29th.</div>
+<div id="leavePlansList" style="margin-top:8px">Loading scheduled entries…</div>
+</div>
+
+<div class="actions"><button id="exportLeaveExcelBtn" onclick="exportLeaveExcel()">⬇ Export Leave Register (Excel)</button><button onclick="copyProxy()">📋 Copy Proxy List</button><button onclick="shareProxy()">↗ Share Proxy List</button><span id="copyMsg" class="copymsg"></span></div>
+<div id="leaveResult" class="result"></div></section>
+<section id="history" class="view"><h2>Daily History</h2>
+<div class="controls"><div><label>Date (dd/mm/yyyy)</label><input type="text" inputmode="numeric" maxlength="10" placeholder="dd/mm/yyyy" id="historyDate" onchange="renderHistory()"></div></div>
+<div class="actions"><button onclick="copyHistory()">📋 Copy</button><button onclick="shareHistory()">↗ Share</button><button class="dangerBtn" onclick="deleteAllHistory()">🗑 Delete All History</button><span id="historyResultMsg" class="copymsg"></span></div>
+<div id="historyResult" class="result">Select a date.</div></section>
+</main>
+<script src="v66-home.js?v=66.0-home-fix-1"></script><script type="module" src="v66-home-cloud.js?v=66.0-home-fix-1"></script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.error('Service worker registration failed:', err));
+  });
+}
+</script>
+</body></html>
