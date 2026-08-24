@@ -1,7 +1,7 @@
 /* VKVTT v66.2 — v60 premium tile feedback + local Swamiji portrait */
 (function(){
   'use strict';
-  const portraitUrl='./Swami%20Vivekananda.png?v=swamiji-local-1';
+  const portraitUrl='./Swami%20Vivekananda.png?v=swamiji-local-2';
   function applyPortrait(){
     const p=document.querySelector('.swamijiHomePortrait');
     if(p){p.src=portraitUrl;p.removeAttribute('srcset');}
