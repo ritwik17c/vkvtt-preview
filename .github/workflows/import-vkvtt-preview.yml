@@ -1,0 +1,30 @@
+name: Import VKVTT v66.2 preview
+on:
+  push:
+    branches: [main]
+    paths: ['trigger-preview-import.txt']
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Import exact v66.2 refinement snapshot
+        run: |
+          git clone --depth 1 --branch v66-2-refinement https://github.com/ritwik17c/vkvtt.git /tmp/vkvtt
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a /tmp/vkvtt/. .
+          rm -rf .git
+          # Preview repository has its own Git history; restore checkout metadata only.
+          git init
+          git remote add origin https://github.com/${GITHUB_REPOSITORY}.git
+          git fetch origin main
+          git checkout -B main origin/main
+          rsync -a --delete --exclude='.git' /tmp/vkvtt/ ./
+          rm -rf .github/workflows
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m 'Import VKVTT v66.2 refinement preview snapshot'
+          git push origin main
