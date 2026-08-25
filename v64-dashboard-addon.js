@@ -33,7 +33,7 @@ Adds Quick Add Leave and dedicated Staff Management.
       staff.innerHTML='<b>👥 Staff Management</b><span>Timetable-safe staff directory with Employee Code, optional Teacher Short Name, separate Academic / Professional Qualifications, service details and full extended Excel round-trip import/export.</span>';
       const teachers=[...tiles.querySelectorAll('.tile')].find(x=>/Teachers\s*&\s*Workload/i.test(x.textContent||''));
       if(teachers)teachers.insertAdjacentElement('beforebegin',staff);else tiles.appendChild(staff);
-      staff.onclick=()=>location.href='admin-staff-management-v6.html?v=66.3-extended-import-fix';
+      staff.onclick=()=>location.href='admin-staff-management-v6.html?v=66.3-staff-safety-fix';
     }
 
     if(!document.getElementById('v64QuickLeaveTile')){
