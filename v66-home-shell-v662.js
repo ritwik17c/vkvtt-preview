@@ -1,22 +1,34 @@
-/* VKVTT v66.2 — v60 premium tile feedback + local Swamiji portrait */
+/* VKVTT v66.2 — v60 premium tile feedback + deployed Swamiji portrait */
 (function(){
   'use strict';
-  const portraitUrl='./Swami%20Vivekananda.png?v=swamiji-local-3';
+  const portraitUrl='https://raw.githubusercontent.com/ritwik17c/vkvtt-preview/main/Swami%20Vivekananda.png?v=swamiji-live-1';
   function applyPortrait(){
+    const isMobile=window.matchMedia('(max-width:700px)').matches;
     const p=document.querySelector('.swamijiHomePortrait');
     if(p){
       p.src=portraitUrl;
       p.removeAttribute('srcset');
       const host=p.closest('.head')||p.parentElement;
-      if(host){host.style.position='relative';}
+      if(host){
+        host.style.position='relative';
+        host.style.setProperty('padding-right',isMobile?'86px':'132px','important');
+      }
       p.style.setProperty('position','absolute','important');
-      p.style.setProperty('right','22px','important');
+      p.style.setProperty('right','0','important');
       p.style.setProperty('top','50%','important');
       p.style.setProperty('transform','translateY(-50%)','important');
       p.style.setProperty('margin','0','important');
-      p.style.setProperty('width',window.matchMedia('(max-width:700px)').matches?'88px':'142px','important');
-      p.style.setProperty('height',window.matchMedia('(max-width:700px)').matches?'88px':'142px','important');
+      p.style.setProperty('width',isMobile?'68px':'108px','important');
+      p.style.setProperty('height',isMobile?'68px':'108px','important');
       p.style.setProperty('object-fit','contain','important');
+      p.style.setProperty('z-index','1','important');
+      const title=document.querySelector('.homeTitleBlock');
+      if(title){
+        title.style.setProperty('position','relative','important');
+        title.style.setProperty('z-index','2','important');
+        title.style.setProperty('max-width',isMobile?'calc(100% - 92px)':'calc(100% - 170px)','important');
+        if(isMobile){title.style.setProperty('padding-right','78px','important');}
+      }
     }
     const lp=document.querySelector('#vkvSlowLoader .vkvLoaderPortrait img');
     if(lp){lp.src=portraitUrl;lp.removeAttribute('srcset');}
