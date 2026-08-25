@@ -21,15 +21,19 @@ Adds Quick Add Leave and dedicated Staff Management.
     document.getElementById('v63DuplicateTile')?.remove();
     document.getElementById('v63QuickLeaveTile')?.remove();
 
+    // Staff Management is now the single personnel-data entry point.
+    // Keep the legacy non-teaching panel/code for compatibility, but remove its dashboard tile.
+    [...tiles.querySelectorAll('.tile')].find(x=>/^Non-Teaching Staff/i.test((x.querySelector('b')?.textContent||'').replace(/^\s*[\p{Emoji_Presentation}\p{Extended_Pictographic}]\s*/u,'')))?.remove();
+
     if(!document.getElementById('v663StaffManagementTile')){
       const staff=document.createElement('div');
       staff.className='tile';
       staff.id='v663StaffManagementTile';
       staff.style.cssText='background:linear-gradient(145deg,#eef8ff,#edf8f2);border-color:#91bfd0';
-      staff.innerHTML='<b>👥 Staff Management</b><span>Timetable-safe staff directory with Employee Code, optional Teacher Short Name, separate Academic / Professional Qualifications and full Excel round-trip import/export.</span>';
+      staff.innerHTML='<b>👥 Staff Management</b><span>Timetable-safe staff directory with Employee Code, optional Teacher Short Name, separate Academic / Professional Qualifications, service details and validated Excel round-trip import/export.</span>';
       const teachers=[...tiles.querySelectorAll('.tile')].find(x=>/Teachers\s*&\s*Workload/i.test(x.textContent||''));
       if(teachers)teachers.insertAdjacentElement('beforebegin',staff);else tiles.appendChild(staff);
-      staff.onclick=()=>location.href='admin-staff-management-v4.html?v=66.3-full-template';
+      staff.onclick=()=>location.href='admin-staff-management-v5.html?v=66.3-contact-validation';
     }
 
     if(!document.getElementById('v64QuickLeaveTile')){
