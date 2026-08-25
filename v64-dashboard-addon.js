@@ -30,10 +30,10 @@ Adds Quick Add Leave and dedicated Staff Management.
       staff.className='tile';
       staff.id='v663StaffManagementTile';
       staff.style.cssText='background:linear-gradient(145deg,#eef8ff,#edf8f2);border-color:#91bfd0';
-      staff.innerHTML='<b>👥 Staff Management</b><span>Timetable-safe staff directory with Employee Code, optional Teacher Short Name, separate Academic / Professional Qualifications, service details and validated Excel round-trip import/export.</span>';
+      staff.innerHTML='<b>👥 Staff Management</b><span>Timetable-safe staff directory with Employee Code, optional Teacher Short Name, separate Academic / Professional Qualifications, service details and full extended Excel round-trip import/export.</span>';
       const teachers=[...tiles.querySelectorAll('.tile')].find(x=>/Teachers\s*&\s*Workload/i.test(x.textContent||''));
       if(teachers)teachers.insertAdjacentElement('beforebegin',staff);else tiles.appendChild(staff);
-      staff.onclick=()=>location.href='admin-staff-management-v5.html?v=66.3-contact-validation';
+      staff.onclick=()=>location.href='admin-staff-management-v6.html?v=66.3-extended-import-fix';
     }
 
     if(!document.getElementById('v64QuickLeaveTile')){
