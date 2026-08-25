@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Staff Management · VKV Nalbari</title>
+<style>html,body{margin:0;height:100%;background:#edf6f1}iframe{display:block;width:100%;height:100%;border:0}</style>
+</head>
+<body>
+<iframe id="staffApp" title="VKV Nalbari Staff Management" src="admin-staff-management-v3.html?v=66.3-qualifications-contact-validation"></iframe>
+<script>
+(function(){
+ const frame=document.getElementById('staffApp');
+ const headers=[
+  'Record ID','Employee Code','Full Name','Display Name','Staff Category',
+  'Designation / Functional Role','Staff Level / Teaching Level',
+  'Academic Qualification','Professional Qualification','Service Status',
+  'Appointment Type','Date of Appointment (dd/mm/yyyy)',
+  'Date of Regularization (dd/mm/yyyy)','Date of Birth (dd/mm/yyyy)',
+  'Teacher Short Name / Timetable Code','Email','Mobile',
+  'Date of Joining (dd/mm/yyyy)','Record Status','Remarks'
+ ];
+ const allowed={
+  'Staff Category':['Teaching','Administrative','Non-Teaching'],
+  'Designation / Functional Role':['Principal / Head of Vidyalaya','Vice-Principal','HS Teacher','Secondary Teacher','Primary In-charge','Primary Teacher','Pre-Primary Teacher','Music Teacher','PET','Librarian','Counsellor','Administrative Staff','Non-Teaching Staff','Other'],
+  'Staff Level / Teaching Level':['Principal / School Head','Vice-Principal','Senior Secondary / HS','Secondary','Primary In-charge','Primary','Pre-Primary','Administrative','Support / Non-Teaching','Other'],
+  'Academic Qualification':['HS','B.A.','B.Sc.','B.Com.','M.A.','M.Sc.','M.Com.','MCA','MFA','Ph.D.','Other'],
+  'Professional Qualification':['B.Ed.','M.Ed.','D.El.Ed.','B.P.Ed.','M.P.Ed.','MLIS','GNM','Hindi Pravin','Montessori Training','Montessori Training + B.Ed.','Other'],
+  'Service Status':['Trainee','Probation','Regularized','Local Appointment','Contract / Temporary','Other'],
+  'Appointment Type':['VKSPV','LA','Other'],
+  'Record Status':['Active','Inactive']
+ };
+ function validEmail(v){v=String(v||'').trim();return !v||/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)}
+ function normalizeMobile(v){
+   let s=String(v||'').trim();if(!s)return'';
+   s=s.replace(/[\s()-]/g,'');
+   if(s.startsWith('+91'))s=s.slice(3);else if(s.startsWith('91')&&s.length===12)s=s.slice(2);
+   return s;
+ }
+ function validMobile(v){const s=normalizeMobile(v);return !s||/^[6-9]\d{9}$/.test(s)}
+ function buildTemplate(XLSX){
+   const wb=XLSX.utils.book_new(),staffRows=[headers];
+   for(let i=0;i<100;i++)staffRows.push(new Array(headers.length).fill(''));
+   const ws=XLSX.utils.aoa_to_sheet(staffRows);
+   ws['!cols']=[{wch:18},{wch:16},{wch:28},{wch:28},{wch:18},{wch:30},{wch:26},{wch:24},{wch:30},{wch:22},{wch:18},{wch:24},{wch:27},{wch:22},{wch:30},{wch:30},{wch:18},{wch:22},{wch:16},{wch:35}];
+   ws['!autofilter']={ref:'A1:T101'};
+   XLSX.utils.book_append_sheet(wb,ws,'Staff Data');
+   const max=Math.max(...Object.values(allowed).map(a=>a.length)),keys=Object.keys(allowed),listRows=[keys];
+   for(let r=0;r<max;r++)listRows.push(keys.map(k=>allowed[k][r]||''));
+   const ls=XLSX.utils.aoa_to_sheet(listRows);ls['!cols']=keys.map(k=>({wch:Math.max(24,k.length+4)}));XLSX.utils.book_append_sheet(wb,ls,'Allowed Values');
+   const instructions=[
+    ['VKV Nalbari · Staff Service Register Template'],
+    ['Purpose','Use this workbook for staff personnel/service data only. Importing through Staff Management does not alter the Master Timetable, timetable allocations, proxy records or active timetable identity.'],
+    ['Full Name','Required. Enter the person’s actual name only. Do not append LA manually.'],
+    ['Display Name','System-generated for reports. Local Appointment records may display Name (LA).'],
+    ['Employee Code','Unique institutional staff/employee number.'],
+    ['Teacher Short Name / Timetable Code','Optional. Examples: RC2, ML. This is not an Employee Code and an existing timetable-linked short name is protected.'],
+    ['Staff Level','Includes Principal / School Head, Vice-Principal, Senior Secondary / HS, Secondary, Primary In-charge, Primary, Pre-Primary, Administrative and Support / Non-Teaching.'],
+    ['Academic Qualification','Use the general academic qualification: M.A., M.Sc., B.A., B.Sc., MCA, MFA, etc.'],
+    ['Professional Qualification','Use professional/job-specific training: B.Ed., M.Ed., D.El.Ed., B.P.Ed., M.P.Ed., MLIS, GNM, Hindi Pravin, Montessori Training, etc.'],
+    ['Email','Optional. If entered, use a complete address such as name@example.com. Invalid email addresses are blocked.'],
+    ['Mobile','Optional. Enter a valid Indian 10-digit mobile number beginning 6–9. +91 or 91 prefix is accepted and normalized.'],
+    ['Appointment Type','Use VKSPV, LA or Other.'],
+    ['Dates','Enter all dates in dd/mm/yyyy format.'],
+    ['Record Status','Use Active or Inactive.'],
+    ['Allowed Values','See the Allowed Values sheet for standardized choices.']
+   ];
+   const ins=XLSX.utils.aoa_to_sheet(instructions);ins['!cols']=[{wch:32},{wch:110}];XLSX.utils.book_append_sheet(wb,ins,'Instructions');
+   XLSX.writeFile(wb,'VKV_Nalbari_Staff_Service_Register_Full_Template.xlsx');
+ }
+ function install(){
+   try{
+     const w=frame.contentWindow,d=frame.contentDocument;if(!d)return;
+     const level=d.getElementById('level');
+     if(level){
+       const vals=[...level.options].map(o=>o.value||o.textContent);
+       if(!vals.includes('Vice-Principal')){const o=d.createElement('option');o.textContent='Vice-Principal';level.insertBefore(o,level.options[2]||null)}
+       if(!vals.includes('Primary In-charge')){const o=d.createElement('option');o.textContent='Primary In-charge';const p=[...level.options].find(x=>x.textContent==='Primary');level.insertBefore(o,p||null)}
+     }
+     const email=d.getElementById('email'),mobile=d.getElementById('mobile');
+     if(email){email.placeholder='e.g. name@example.com';email.title='Enter a valid email address or leave blank';email.insertAdjacentHTML('afterend','<div class="small" id="vkvEmailHelp">Optional · complete email address required if entered.</div>')}
+     if(mobile){mobile.inputMode='numeric';mobile.placeholder='10-digit mobile number';mobile.title='Enter a valid Indian 10-digit mobile number or leave blank';mobile.insertAdjacentHTML('afterend','<div class="small" id="vkvMobileHelp">Optional · 10 digits beginning 6–9; +91/91 prefix accepted.</div>')}
+     function contactWarning(){
+       const bad=[];if(email&&!validEmail(email.value))bad.push('Email address is not valid.');if(mobile&&!validMobile(mobile.value))bad.push('Mobile number must be a valid Indian 10-digit number beginning 6–9.');
+       const msg=d.getElementById('formMsg');if(bad.length&&msg){msg.style.display='block';msg.className='status warn';msg.textContent=bad.join(' ')}return bad.length===0;
+     }
+     email?.addEventListener('blur',contactWarning);mobile?.addEventListener('blur',()=>{if(validMobile(mobile.value))mobile.value=normalizeMobile(mobile.value);contactWarning()});
+     const save=d.getElementById('save');if(save&&save.onclick){const old=save.onclick;save.onclick=async function(e){if(!contactWarning())return false;if(mobile)mobile.value=normalizeMobile(mobile.value);return old.call(this,e)}}
+     const input=d.getElementById('importFile');if(input&&input.onchange){const old=input.onchange;input.onchange=async function(e){
+       const f=e.target.files?.[0];if(!f)return;
+       try{const buf=await f.arrayBuffer(),wb=w.XLSX.read(buf,{type:'array'}),data=w.XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''}),bad=[];
+         data.forEach((r,i)=>{const em=String(r.Email||r.email||'').trim(),mo=String(r.Mobile||r.mobile||r.Phone||'').trim();if(em&&!validEmail(em))bad.push('Row '+(i+2)+': invalid Email');if(mo&&!validMobile(mo))bad.push('Row '+(i+2)+': invalid Mobile')});
+         if(bad.length){alert('Staff Excel has contact-detail errors:\n\n'+bad.slice(0,20).join('\n')+(bad.length>20?'\n… and '+(bad.length-20)+' more.':''));e.target.value='';return false}
+       }catch(err){alert('Could not validate staff Excel: '+(err.message||err));e.target.value='';return false}
+       return old.call(this,e)
+     }}
+     const template=d.getElementById('template');if(template){template.textContent='Download Full Excel Template';template.title='Download Staff Data, Allowed Values and Instructions workbook';template.onclick=e=>{e.preventDefault();e.stopPropagation();if(!w.XLSX){alert('Excel library is not ready. Please try again.');return}buildTemplate(w.XLSX)}}
+   }catch(e){console.warn('Staff v5 enhancer:',e)}
+ }
+ frame.addEventListener('load',install);
+})();
+</script>
+</body>
+</html>
