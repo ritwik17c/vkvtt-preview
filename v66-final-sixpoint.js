@@ -1,11 +1,11 @@
-// VKVTT v66.2 final six-point runtime corrections
+// VKVTT v66.3 preview runtime corrections
 (async function(){
   'use strict';
 
-  // Preview only: clear stale service-worker/cache state once after a synchronized upload.
+  // Preview only: clear stale service-worker/cache state once after this role-routing update.
   if(location.pathname.startsWith('/vkvtt-preview/')){
     try{
-      const flag='vkvttPreviewCacheResetV662Final1';
+      const flag='vkvttPreviewCacheResetV663RoleUx1';
       if(!sessionStorage.getItem(flag)){
         sessionStorage.setItem(flag,'1');
         if('serviceWorker' in navigator){
@@ -16,7 +16,7 @@
           const keys=await caches.keys();
           await Promise.all(keys.filter(k=>/vkvtt/i.test(k)).map(k=>caches.delete(k)));
         }
-        const u=new URL(location.href);u.searchParams.set('fresh','662final1');location.replace(u.toString());return;
+        const u=new URL(location.href);u.searchParams.set('fresh','663roleux1');location.replace(u.toString());return;
       }
     }catch(e){console.warn('Preview cache reset:',e)}
   }
@@ -39,11 +39,49 @@
     setTimeout(()=>b.classList.remove('v662-click-nudge'),220);
   },true);
 
+  // Preview homepage role UX:
+  // - My Area is meaningful only for a teacher-linked user (permanent or temporary teacher).
+  // - Leave Editor must use the provisional approval workflow, never the old direct approved-status editor.
+  if(/\/vkvtt-preview\/(?:index\.html)?$/i.test(location.pathname)){
+    function isTeacherLinked(){
+      const D=window.DATA||{},code=String(window.__vkvMyTeacherCode||'').trim();
+      if(!code)return false;
+      if((D.teachers||[]).some(t=>String(t&&t.code||'')===code))return true;
+      return (D.temporaryReplacements||[]).some(r=>String(r&&r.tempCode||'')===code);
+    }
+    function enforceHomeRoleUx(){
+      const role=String(window.__vkvRole||'').trim();
+      const title=document.getElementById('myAreaTitle'),grid=document.getElementById('myAreaGrid');
+      if(window.DATA){
+        const showTeacherArea=isTeacherLinked();
+        if(title)title.style.display=showTeacherArea?'block':'none';
+        if(grid)grid.style.display=showTeacherArea?'grid':'none';
+      }
+      const leaveBtn=document.getElementById('leaveOpsBtn');
+      if(leaveBtn&&role==='leave_editor'){
+        leaveBtn.textContent='📝 Leave / Duty Leave Editor';
+        leaveBtn.setAttribute('title','Prepare provisional Leave, OD or Special Assignment for Principal approval');
+        leaveBtn.setAttribute('onclick',"location.href='leave-editor-phase2.html?v=66.3-phase2';return false");
+        leaveBtn.disabled=false;
+        leaveBtn.style.display='';
+        leaveBtn.classList.remove('disabled');
+      }
+    }
+    let tries=0;
+    const roleUxTimer=setInterval(()=>{
+      enforceHomeRoleUx();
+      tries++;
+      if((window.DATA&&window.__vkvRole)||tries>40)clearInterval(roleUxTimer);
+    },350);
+    window.addEventListener('focus',()=>setTimeout(enforceHomeRoleUx,80));
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(enforceHomeRoleUx,80)});
+  }
+
   // Leave Master Editor: collapse dated records from one consecutive saved transaction
   // into a single visual card. Underlying dated records remain untouched for proxy,
   // balance, audit, editing and archival. Individual cards can be expanded on demand.
   if(document.getElementById('recordList') && /admin-leave-editor\.html$/i.test(location.pathname)){
-    const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
+    const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const parsePlanKey=key=>{
       const m=String(key||'').match(/^le_(.+)_(\d{8})_(\d+)_(\d+)$/);
       if(!m)return null;
@@ -67,11 +105,13 @@
       return Number.isFinite(n)?n:'';
     };
     const cleanStatus=line=>String(line||'').replace(/\s*·\s*[0-9]+(?:\.[0-9]+)?\s+leave units?\s*$/i,'').trim();
+    const host=document.getElementById('recordList');
+    let observer=null;
 
     function groupApprovedCards(){
-      const host=document.getElementById('recordList');
       if(!host||host.dataset.groupingBusy==='1')return;
       host.dataset.groupingBusy='1';
+      if(observer)observer.disconnect();
       try{
         host.querySelectorAll('.v663-consecutive-summary').forEach(x=>x.remove());
         host.querySelectorAll('.recordCard[data-v663-grouped="1"]').forEach(x=>{x.style.display='';delete x.dataset.v663Grouped});
@@ -116,10 +156,12 @@
           }
         }
       }catch(e){console.warn('Consecutive leave grouping:',e)}
-      finally{host.dataset.groupingBusy='0'}
+      finally{
+        host.dataset.groupingBusy='0';
+        if(observer)observer.observe(host,{childList:true});
+      }
     }
-    const host=document.getElementById('recordList');
-    const observer=new MutationObserver(()=>setTimeout(groupApprovedCards,0));
+    observer=new MutationObserver(()=>setTimeout(groupApprovedCards,0));
     observer.observe(host,{childList:true});
     setTimeout(groupApprovedCards,250);
   }
