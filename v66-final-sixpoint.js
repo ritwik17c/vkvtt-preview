@@ -39,6 +39,91 @@
     setTimeout(()=>b.classList.remove('v662-click-nudge'),220);
   },true);
 
+  // Leave Master Editor: collapse dated records from one consecutive saved transaction
+  // into a single visual card. Underlying dated records remain untouched for proxy,
+  // balance, audit, editing and archival. Individual cards can be expanded on demand.
+  if(document.getElementById('recordList') && /admin-leave-editor\.html$/i.test(location.pathname)){
+    const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
+    const parsePlanKey=key=>{
+      const m=String(key||'').match(/^le_(.+)_(\d{8})_(\d+)_(\d+)$/);
+      if(!m)return null;
+      const y=m[2].slice(0,4),mo=m[2].slice(4,6),d=m[2].slice(6,8);
+      return{code:m[1],date:`${y}-${mo}-${d}`,stamp:m[3],index:Number(m[4])};
+    };
+    const ddmmyyyy=iso=>{const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}/${m[2]}/${m[1]}`:iso};
+    const nextDay=iso=>{const d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+    const statusLine=card=>{
+      const meta=card.querySelector('.meta');
+      if(!meta)return'';
+      const html=meta.innerHTML||'';
+      const first=html.split(/<br\s*\/?>/i)[0]||'';
+      const tmp=document.createElement('div');tmp.innerHTML=first;
+      return (tmp.textContent||'').replace(/\s+/g,' ').trim();
+    };
+    const totalUnits=(line,count)=>{
+      const m=String(line||'').match(/·\s*([0-9]+(?:\.[0-9]+)?)\s+leave unit/i);
+      if(!m)return'';
+      const n=Math.round(Number(m[1])*count*2)/2;
+      return Number.isFinite(n)?n:'';
+    };
+    const cleanStatus=line=>String(line||'').replace(/\s*·\s*[0-9]+(?:\.[0-9]+)?\s+leave units?\s*$/i,'').trim();
+
+    function groupApprovedCards(){
+      const host=document.getElementById('recordList');
+      if(!host||host.dataset.groupingBusy==='1')return;
+      host.dataset.groupingBusy='1';
+      try{
+        host.querySelectorAll('.v663-consecutive-summary').forEach(x=>x.remove());
+        host.querySelectorAll('.recordCard[data-v663-grouped="1"]').forEach(x=>{x.style.display='';delete x.dataset.v663Grouped});
+        const cards=[...host.children].filter(x=>x.classList&&x.classList.contains('recordCard'));
+        const buckets=new Map();
+        for(const card of cards){
+          const edit=card.querySelector('[data-edit-kind="plan"][data-edit-key]');
+          if(!edit)continue;
+          const p=parsePlanKey(edit.dataset.editKey);if(!p)continue;
+          const line=statusLine(card);
+          const key=[p.code,p.stamp,line].join('|');
+          if(!buckets.has(key))buckets.set(key,[]);
+          buckets.get(key).push({card,p,line});
+        }
+        for(const items0 of buckets.values()){
+          const items=[...items0].sort((a,b)=>a.p.date.localeCompare(b.p.date)||a.p.index-b.p.index);
+          const runs=[];let run=[];
+          for(const item of items){
+            if(!run.length||item.p.date===nextDay(run[run.length-1].p.date))run.push(item);
+            else{runs.push(run);run=[item]}
+          }
+          if(run.length)runs.push(run);
+          for(const r of runs){
+            if(r.length<2)continue;
+            const first=r[0],last=r[r.length-1],firstCard=first.card;
+            const title=firstCard.querySelector('.cardTitle')?.innerHTML||'';
+            const meta=firstCard.querySelector('.meta');
+            const source=(meta?.textContent||'').match(/Source:\s*(.+)$/im)?.[1]?.trim()||'Scheduled / approved';
+            const core=cleanStatus(first.line),units=totalUnits(first.line,r.length);
+            const summary=document.createElement('div');
+            summary.className='recordCard v663-consecutive-summary';
+            summary.style.borderLeftWidth='6px';
+            summary.innerHTML=`<div class="cardTop"><div><div class="cardTitle">${title}</div><div class="meta">${esc(core)}${units!==''?` · <b>${esc(units)}</b> leave unit${Number(units)===1?'':'s'}`:''}<br><b>${esc(ddmmyyyy(first.p.date))} → ${esc(ddmmyyyy(last.p.date))}</b> · ${r.length} consecutive day${r.length===1?'':'s'}<br><span class="small">Source: ${esc(source)} · grouped display</span></div></div><div><span class="pill">${last.p.date < new Date().toISOString().slice(0,10)?'Past':'Consecutive'}</span></div></div><div class="actions"><button type="button" class="primary v663-show-dates">Show ${r.length} individual records for edit / archive</button></div>`;
+            firstCard.parentNode.insertBefore(summary,firstCard);
+            r.forEach(x=>{x.card.dataset.v663Grouped='1';x.card.style.display='none'});
+            const btn=summary.querySelector('.v663-show-dates');
+            btn.onclick=()=>{
+              const opening=r[0].card.style.display==='none';
+              r.forEach(x=>x.card.style.display=opening?'':'none');
+              btn.textContent=opening?'Hide individual records':`Show ${r.length} individual records for edit / archive`;
+            };
+          }
+        }
+      }catch(e){console.warn('Consecutive leave grouping:',e)}
+      finally{host.dataset.groupingBusy='0'}
+    }
+    const host=document.getElementById('recordList');
+    const observer=new MutationObserver(()=>setTimeout(groupApprovedCards,0));
+    observer.observe(host,{childList:true});
+    setTimeout(groupApprovedCards,250);
+  }
+
   // Homepage Daily History: supplement the old snapshot with authoritative dated records.
   if(!document.getElementById('historyResult'))return;
   try{
