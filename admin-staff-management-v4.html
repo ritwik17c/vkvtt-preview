@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Staff Management · VKV Nalbari</title>
+<style>html,body{margin:0;height:100%;background:#edf6f1}iframe{display:block;width:100%;height:100%;border:0}</style>
+</head>
+<body>
+<iframe id="staffApp" title="VKV Nalbari Staff Management" src="admin-staff-management-v3.html?v=66.3-qualifications"></iframe>
+<script>
+(function(){
+ const frame=document.getElementById('staffApp');
+ const headers=[
+  'Record ID','Employee Code','Full Name','Display Name','Staff Category',
+  'Designation / Functional Role','Staff Level / Teaching Level',
+  'Academic Qualification','Professional Qualification','Service Status',
+  'Appointment Type','Date of Appointment (dd/mm/yyyy)',
+  'Date of Regularization (dd/mm/yyyy)','Date of Birth (dd/mm/yyyy)',
+  'Teacher Short Name / Timetable Code','Email','Mobile',
+  'Date of Joining (dd/mm/yyyy)','Record Status','Remarks'
+ ];
+ const allowed={
+  'Staff Category':['Teaching','Administrative','Non-Teaching'],
+  'Designation / Functional Role':['Principal / Head of Vidyalaya','Vice-Principal','HS Teacher','Secondary Teacher','Primary In-charge','Primary Teacher','Pre-Primary Teacher','Music Teacher','PET','Librarian','Counsellor','Administrative Staff','Non-Teaching Staff','Other'],
+  'Staff Level / Teaching Level':['Principal / School Head','Senior Secondary / HS','Secondary','Primary','Pre-Primary','Administrative','Support / Non-Teaching','Other'],
+  'Academic Qualification':['HS','B.A.','B.Sc.','B.Com.','M.A.','M.Sc.','M.Com.','MCA','MFA','Ph.D.','Other'],
+  'Professional Qualification':['B.Ed.','M.Ed.','D.El.Ed.','B.P.Ed.','M.P.Ed.','MLIS','GNM','Hindi Pravin','Montessori Training','Montessori Training + B.Ed.','Other'],
+  'Service Status':['Trainee','Probation','Regularized','Local Appointment','Contract / Temporary','Other'],
+  'Appointment Type':['VKSPV','LA','Other'],
+  'Record Status':['Active','Inactive']
+ };
+ function buildTemplate(XLSX){
+   const wb=XLSX.utils.book_new();
+   const staffRows=[headers];
+   for(let i=0;i<100;i++)staffRows.push(new Array(headers.length).fill(''));
+   const ws=XLSX.utils.aoa_to_sheet(staffRows);
+   ws['!cols']=[
+    {wch:18},{wch:16},{wch:28},{wch:28},{wch:18},{wch:30},{wch:26},{wch:24},{wch:30},{wch:22},
+    {wch:18},{wch:24},{wch:27},{wch:22},{wch:30},{wch:28},{wch:16},{wch:22},{wch:16},{wch:35}
+   ];
+   ws['!autofilter']={ref:'A1:T101'};
+   XLSX.utils.book_append_sheet(wb,ws,'Staff Data');
+
+   const max=Math.max(...Object.values(allowed).map(a=>a.length));
+   const keys=Object.keys(allowed);
+   const listRows=[keys];
+   for(let r=0;r<max;r++)listRows.push(keys.map(k=>allowed[k][r]||''));
+   const ls=XLSX.utils.aoa_to_sheet(listRows);
+   ls['!cols']=keys.map(k=>({wch:Math.max(24,k.length+4)}));
+   XLSX.utils.book_append_sheet(wb,ls,'Allowed Values');
+
+   const instructions=[
+    ['VKV Nalbari · Staff Service Register Template'],
+    ['Purpose','Use this workbook for staff personnel/service data only. Importing it through Staff Management does not alter the Master Timetable, timetable allocations, proxy records or active timetable identity.'],
+    ['Full Name','Required. Enter the person’s actual name only. Do not append LA manually.'],
+    ['Display Name','System-generated for reports. Local Appointment records may display Name (LA). Do not use this field to identify a person for import.'],
+    ['Employee Code','Unique institutional staff/employee number. Already assigned for many non-teaching staff; teacher employee codes may be added when available.'],
+    ['Teacher Short Name / Timetable Code','Optional. Examples: RC2, ML. This is not an Employee Code. Existing timetable-linked short names are protected from accidental change.'],
+    ['Staff Category','Use Teaching, Administrative or Non-Teaching.'],
+    ['Academic Qualification','Choose a general academic qualification such as M.A., M.Sc., B.A., B.Sc., MCA, MFA, etc.'],
+    ['Professional Qualification','Choose professional/job-specific training such as B.Ed., M.Ed., D.El.Ed., B.P.Ed., M.P.Ed., MLIS, GNM, Hindi Pravin or Montessori Training.'],
+    ['Mixed qualification example','M.A., B.Ed. → Academic Qualification: M.A.; Professional Qualification: B.Ed.'],
+    ['Mixed qualification example','B.Sc., D.El.Ed. → Academic Qualification: B.Sc.; Professional Qualification: D.El.Ed.'],
+    ['Mixed qualification example','HS, GNM → Academic Qualification: HS; Professional Qualification: GNM.'],
+    ['Mixed qualification example','B.A., Hindi Pravin → Academic Qualification: B.A.; Professional Qualification: Hindi Pravin.'],
+    ['Appointment Type','Use VKSPV for VKSPV Appointment, LA for Local Appointment, or Other.'],
+    ['Dates','Enter all dates in dd/mm/yyyy format.'],
+    ['Date of Regularization','Leave blank when not applicable or not yet regularized.'],
+    ['Record Status','Use Active or Inactive. Inactive/archived records are retained for history.'],
+    ['Allowed Values','See the Allowed Values sheet for standardized choices used by the app.'],
+    ['Other values','Where the app offers Other, use Other in the standardized field and explain details in Remarks if needed.']
+   ];
+   const ins=XLSX.utils.aoa_to_sheet(instructions);
+   ins['!cols']=[{wch:32},{wch:110}];
+   XLSX.utils.book_append_sheet(wb,ins,'Instructions');
+   XLSX.writeFile(wb,'VKV_Nalbari_Staff_Service_Register_Full_Template.xlsx');
+ }
+ frame.addEventListener('load',()=>{
+   try{
+     const w=frame.contentWindow,d=frame.contentDocument,btn=d&&d.getElementById('template');
+     if(!btn)return;
+     btn.textContent='Download Full Excel Template';
+     btn.title='Download Staff Data, Allowed Values and Instructions workbook';
+     btn.onclick=(e)=>{e.preventDefault();e.stopPropagation();if(!w.XLSX){alert('Excel library is not ready. Please try again.');return}buildTemplate(w.XLSX)};
+   }catch(e){console.warn('Staff template enhancer:',e)}
+ });
+})();
+</script>
+</body>
+</html>
