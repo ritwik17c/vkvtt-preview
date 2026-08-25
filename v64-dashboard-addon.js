@@ -26,10 +26,10 @@ Adds Quick Add Leave and dedicated Staff Management.
       staff.className='tile';
       staff.id='v663StaffManagementTile';
       staff.style.cssText='background:linear-gradient(145deg,#eef8ff,#edf8f2);border-color:#91bfd0';
-      staff.innerHTML='<b>👥 Staff Management</b><span>Add, edit, archive, import and export Teaching, Administrative and Non-Teaching staff. Employee Code is kept separate from a teacher’s Timetable Short Name.</span>';
+      staff.innerHTML='<b>👥 Staff Management</b><span>Timetable-safe staff directory with optional Teacher Short Name, unique Employee Code, archive controls and Excel round-trip import/export.</span>';
       const teachers=[...tiles.querySelectorAll('.tile')].find(x=>/Teachers\s*&\s*Workload/i.test(x.textContent||''));
       if(teachers)teachers.insertAdjacentElement('beforebegin',staff);else tiles.appendChild(staff);
-      staff.onclick=()=>location.href='admin-staff-management.html?v=66.3';
+      staff.onclick=()=>location.href='admin-staff-management-v2.html?v=66.3-safe-staff';
     }
 
     if(!document.getElementById('v64QuickLeaveTile')){
