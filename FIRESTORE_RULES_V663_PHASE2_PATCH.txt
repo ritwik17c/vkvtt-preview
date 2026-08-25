@@ -1,8 +1,10 @@
 // VKVTT v66.3 Phase 2 — provisional leave / approval workflow patch
-// REVIEW AND MERGE INTO THE ACTIVE FIRESTORE RULESET ONLY AFTER PREVIEW TESTING.
-// Do not publish this patch by itself.
+// MERGE THESE CHANGES INTO THE ACTIVE FIRESTORE RULESET BEFORE TESTING
+// delegated provisional writes. Do not publish this patch by itself.
 
-// Add beside the existing role helpers:
+// -------------------------------------------------------------------
+// 1. Add beside the existing role helpers
+// -------------------------------------------------------------------
 function isLeaveEditor() {
   return uidActive() && uidRole() == 'leave_editor';
 }
@@ -11,34 +13,75 @@ function canPrepareLeave() {
   return isAdmin() || isLeaveEditor();
 }
 
-// Phase-2 provisional leave documents.
-// Leave Editors may create/update only their own provisional/returned work.
-// Admin may review all records and is the only role allowed to transition a
-// record to approved/cancelled state.
+// -------------------------------------------------------------------
+// 2. Extend READ access only where the provisional workspace needs it
+// -------------------------------------------------------------------
+// Existing approvedStatusPlans block:
+// KEEP writes exactly as they are. Change only the read line to:
+// allow read: if isAdmin() || isLeaveViewer() || isLeaveEditor();
+
+// Existing leaveRules block:
+// KEEP Admin-only writes exactly as they are. Change only the read line to:
+// allow read: if isStatusEditor() || isLeaveEditor();
+
+// Do NOT broaden approvedDailyStatus writes, dailyRecords writes,
+// personalStatus writes, legacyLeaveAccounting, leaveAudit or leaveControl.
+
+// -------------------------------------------------------------------
+// 3. Add the new Phase-2 provisional collection
+// -------------------------------------------------------------------
+// Canonical workflow fields used here:
+// approvalStatus: provisional | approved | returned | cancelled
+// createdByUid / createdByEmail / createdAtMs
+// updatedByUid / updatedByEmail / updatedAtMs
+// submittedAtMs
+// approvedByUid / approvedByEmail / approvedAtMs
+// returnedByUid / returnedByEmail / returnedAtMs / returnRemark
+
 match /provisionalLeavePlans/{planId} {
-  allow read: if isAdmin() || isLeaveEditor() || isProxyManager() || isStatusEditor();
+  allow read: if isAdmin()
+              || isLeaveEditor()
+              || isProxyManager()
+              || isStatusEditor();
 
+  // Leave Editor/Admin may create a provisional record only for themselves
+  // as creator/editor. No approval metadata may be forged on creation.
   allow create: if canPrepareLeave()
-                && request.resource.data.status == 'provisional'
+                && request.resource.data.approvalStatus == 'provisional'
                 && request.resource.data.createdByUid == request.auth.uid
-                && request.resource.data.lastEditedByUid == request.auth.uid;
+                && request.resource.data.updatedByUid == request.auth.uid
+                && !request.resource.data.keys().hasAny([
+                  'approvedByUid','approvedByEmail','approvedAt','approvedAtMs',
+                  'returnedByUid','returnedByEmail','returnedAt','returnedAtMs',
+                  'returnRemark','cancelledByUid','cancelledByEmail',
+                  'cancelledAt','cancelledAtMs'
+                ]);
 
+  // Principal/Admin may perform approval-state transitions.
+  // A Leave Editor may only correct their own provisional/returned record and
+  // resubmit it as provisional. Creator identity and approval metadata are protected.
   allow update: if isAdmin()
                 || (isLeaveEditor()
                     && resource.data.createdByUid == request.auth.uid
-                    && resource.data.status in ['provisional', 'returned']
-                    && request.resource.data.status == 'provisional'
+                    && resource.data.approvalStatus in ['provisional', 'returned']
+                    && request.resource.data.approvalStatus == 'provisional'
                     && request.resource.data.createdByUid == resource.data.createdByUid
-                    && request.resource.data.lastEditedByUid == request.auth.uid
+                    && request.resource.data.createdByEmail == resource.data.createdByEmail
+                    && request.resource.data.createdAtMs == resource.data.createdAtMs
+                    && request.resource.data.updatedByUid == request.auth.uid
                     && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-                      'approvedByUid','approvedByEmail','approvedAt',
-                      'approvalDecision','officialPostedAt'
+                      'approvedByUid','approvedByEmail','approvedAt','approvedAtMs',
+                      'returnedByUid','returnedByEmail','returnedAt','returnedAtMs',
+                      'cancelledByUid','cancelledByEmail','cancelledAt','cancelledAtMs'
                     ]));
 
+  // Official workflow records are never hard-deleted.
   allow delete: if false;
 }
 
-// Immutable approval decision trail. The Principal/Admin alone creates it.
+// -------------------------------------------------------------------
+// 4. Add immutable Principal/Admin approval audit
+// -------------------------------------------------------------------
 match /leaveApprovalAudit/{auditId} {
   allow read: if isAdmin();
   allow create: if isAdmin()
@@ -47,7 +90,12 @@ match /leaveApprovalAudit/{auditId} {
   allow update, delete: if false;
 }
 
-// Important integration rule:
-// Do NOT broaden approvedStatusPlans or approvedDailyStatus writes to Leave Editor.
-// A provisional entry may influence Proxy Manager through provisionalLeavePlans,
-// but must not become an approved school record until Principal/Admin approval.
+// -------------------------------------------------------------------
+// SECURITY INVARIANTS
+// -------------------------------------------------------------------
+// 1. Leave Editor NEVER writes approvedStatusPlans or approvedDailyStatus.
+// 2. Leave Editor NEVER writes dailyRecords, personalStatus or legacy accounting.
+// 3. Provisional leave may later be consumed by Proxy Manager operationally,
+//    but it is not an approved school record until Principal/Admin approval.
+// 4. Approval/return/cancellation metadata is Principal/Admin-controlled.
+// 5. Do not weaken any existing fallback-deny rule.
