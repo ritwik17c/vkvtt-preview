@@ -29,19 +29,15 @@ iframe{display:block;width:100%;flex:1;border:0;background:#edf6f1}
  const activeBtn=document.getElementById('showActive');
  const inactiveBtn=document.getElementById('showInactive');
  function innerDoc(){try{return frame.contentDocument}catch(e){return null}}
- function clickFilter(name){const d=innerDoc();if(!d)return;const b=d.querySelector(`[data-filter="${name}"]`);if(b){b.style.setProperty('display','inline-block','important');b.style.setProperty('visibility','visible','important');b.click();d.getElementById('list')?.scrollIntoView({behavior:'smooth',block:'start'})}}
- activeBtn.onclick=()=>clickFilter('all');
- inactiveBtn.onclick=()=>clickFilter('inactive');
  function decorate(){
    const d=innerDoc();if(!d)return;
    const tabs=d.querySelector('.tabs');
    if(tabs){tabs.style.setProperty('display','flex','important');tabs.style.setProperty('visibility','visible','important');tabs.style.setProperty('opacity','1','important');tabs.style.setProperty('min-height','44px','important')}
    const inTab=d.querySelector('[data-filter="inactive"]');
-   if(inTab){inTab.textContent='Inactive / Archived';inTab.style.setProperty('display','inline-block','important');inTab.style.setProperty('visibility','visible','important')}
+   if(inTab){if(inTab.textContent!=='Inactive / Archived')inTab.textContent='Inactive / Archived';inTab.style.setProperty('display','inline-block','important');inTab.style.setProperty('visibility','visible','important')}
    const service=d.getElementById('serviceStatus');
-   if(service){[...service.options].forEach(o=>{if((o.value||o.textContent).trim()==='Local Appointment')o.textContent='LA'})}
-   const rows=d.querySelectorAll('#list tbody tr');
-   rows.forEach(row=>{
+   if(service){[...service.options].forEach(o=>{if((o.value||o.textContent).trim()==='Local Appointment'&&o.textContent!=='LA')o.textContent='LA'})}
+   d.querySelectorAll('#list tbody tr').forEach(row=>{
      const cells=row.querySelectorAll('td');
      if(cells[8]&&cells[8].textContent.trim()==='Local Appointment')cells[8].textContent='LA';
      const status=cells[13]?.textContent.trim();
@@ -50,16 +46,23 @@ iframe{display:block;width:100%;flex:1;border:0;background:#edf6f1}
        const edit=actions.querySelector('[data-edit]');
        if(edit){
          const b=d.createElement('button');b.type='button';b.textContent='Activate Again';b.setAttribute('data-v7-reactivate','1');b.style.marginLeft='4px';
-         b.onclick=()=>{edit.click();const a=d.getElementById('active'),save=d.getElementById('save');if(a&&save){a.value='true';setTimeout(()=>save.click(),50)}};
+         b.onclick=()=>{edit.click();const a=d.getElementById('active'),save=d.getElementById('save');if(a&&save){a.value='true';setTimeout(()=>save.click(),80)}};
          actions.insertBefore(b,actions.querySelector('[data-delete]')||null);
        }
      }
    });
  }
- frame.addEventListener('load',()=>{
+ function clickFilter(name){
    const d=innerDoc();if(!d)return;
-   decorate();
-   const obs=new MutationObserver(decorate);obs.observe(d.body,{childList:true,subtree:true,characterData:true});
+   const b=d.querySelector(`[data-filter="${name}"]`);
+   if(b){b.style.setProperty('display','inline-block','important');b.style.setProperty('visibility','visible','important');b.click();setTimeout(decorate,120);setTimeout(decorate,500);d.getElementById('list')?.scrollIntoView({behavior:'smooth',block:'start'})}
+ }
+ activeBtn.onclick=()=>clickFilter('all');
+ inactiveBtn.onclick=()=>clickFilter('inactive');
+ frame.addEventListener('load',()=>{
+   // Bounded refresh only: no MutationObserver, so this cannot self-trigger or freeze the page.
+   let tries=0;
+   const timer=setInterval(()=>{decorate();tries++;if(tries>=8)clearInterval(timer)},350);
  });
 })();
 </script>
