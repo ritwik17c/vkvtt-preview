@@ -1,15 +1,8 @@
-/* VKVTT v66.5.1 — premium shell bootstrap. Staff/category controller loads last. */
+/* VKVTT v66.6 — premium shell bootstrap. Staff/category controller loads last. */
 (function(){
 'use strict';
 const portraitUrl='https://raw.githubusercontent.com/ritwik17c/vkvtt-preview/main/Swami%20Vivekananda.png?v=swamiji-live-2';
-function applyPortrait(){
- const isMobile=window.matchMedia('(max-width:700px)').matches,p=document.querySelector('.swamijiHomePortrait');
- if(p){p.src=portraitUrl;p.removeAttribute('srcset');p.alt='Swami Vivekananda';const host=p.closest('.head')||p.parentElement;if(host){host.style.position='relative';host.style.setProperty('padding-right',isMobile?'86px':'132px','important')}Object.assign(p.style,{position:'absolute',right:'0',top:'50%',transform:'translateY(-50%)',margin:'0',objectFit:'contain',zIndex:'1'});p.style.setProperty('width',isMobile?'68px':'108px','important');p.style.setProperty('height',isMobile?'68px':'108px','important');const title=document.querySelector('.homeTitleBlock');if(title){title.style.setProperty('position','relative','important');title.style.setProperty('z-index','2','important');title.style.setProperty('max-width',isMobile?'calc(100% - 92px)':'calc(100% - 170px)','important')}}
- const lp=document.querySelector('#vkvSlowLoader .vkvLoaderPortrait img');if(lp){lp.src=portraitUrl;lp.removeAttribute('srcset')}
-}
-function loadAuthoritativeStaffHome(){if(document.getElementById('v665StaffHomeScript'))return;const s=document.createElement('script');s.id='v665StaffHomeScript';s.src='v66-staff-home-v665.js?v=66.5.1-staff-home';s.defer=true;document.body.appendChild(s)}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',applyPortrait);else applyPortrait();
-window.addEventListener('resize',applyPortrait);
-window.addEventListener('load',()=>setTimeout(loadAuthoritativeStaffHome,650),{once:true});
-setTimeout(loadAuthoritativeStaffHome,1800);
+function applyPortrait(){const isMobile=window.matchMedia('(max-width:700px)').matches,p=document.querySelector('.swamijiHomePortrait');if(p){p.src=portraitUrl;p.removeAttribute('srcset');p.alt='Swami Vivekananda';const host=p.closest('.head')||p.parentElement;if(host){host.style.position='relative';host.style.setProperty('padding-right',isMobile?'86px':'132px','important')}Object.assign(p.style,{position:'absolute',right:'0',top:'50%',transform:'translateY(-50%)',margin:'0',objectFit:'contain',zIndex:'1'});p.style.setProperty('width',isMobile?'68px':'108px','important');p.style.setProperty('height',isMobile?'68px':'108px','important');const title=document.querySelector('.homeTitleBlock');if(title){title.style.setProperty('position','relative','important');title.style.setProperty('z-index','2','important');title.style.setProperty('max-width',isMobile?'calc(100% - 92px)':'calc(100% - 170px)','important')}}const lp=document.querySelector('#vkvSlowLoader .vkvLoaderPortrait img');if(lp){lp.src=portraitUrl;lp.removeAttribute('srcset')}}
+function loadAuthoritativeStaffHome(){if(document.getElementById('v665StaffHomeScript'))return;const s=document.createElement('script');s.id='v665StaffHomeScript';s.src='v66-staff-home-v665.js?v=66.6-notice-teacherfix';s.defer=true;document.body.appendChild(s)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',applyPortrait);else applyPortrait();window.addEventListener('resize',applyPortrait);window.addEventListener('load',()=>setTimeout(loadAuthoritativeStaffHome,600),{once:true});setTimeout(loadAuthoritativeStaffHome,1600);
 })();
