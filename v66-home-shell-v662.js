@@ -1,4 +1,4 @@
-/* VKVTT v66.6.2 — premium shell + authoritative one-time staff identity */
+/* VKVTT v66.6.4 — premium shell + authoritative one-time staff identity */
 (function(){
   'use strict';
   const portraitUrl='https://raw.githubusercontent.com/ritwik17c/vkvtt-preview/main/Swami%20Vivekananda.png?v=swamiji-live-1';
@@ -15,7 +15,7 @@
   }
   function tileHost(el){return el&&el.closest&&el.closest('.myGrid>button,.nav>button,.opsGrid>button')}
   document.addEventListener('click',e=>{const b=tileHost(e.target);if(!b)return;b.classList.remove('v662-click-nudge');void b.offsetWidth;b.classList.add('v662-click-nudge');setTimeout(()=>b.classList.remove('v662-click-nudge'),220)},true);
-  function loadStaffOnce(){if(document.getElementById('v666StaffIdentityOnce'))return;const s=document.createElement('script');s.id='v666StaffIdentityOnce';s.src='v66-staff-identity-once.js?v=66.6.2-category-css';s.defer=true;document.body.appendChild(s);}
+  function loadStaffOnce(){if(document.getElementById('v666StaffIdentityOnce'))return;const s=document.createElement('script');s.id='v666StaffIdentityOnce';s.src='v66-staff-identity-once.js?v=66.6.4-viewer-link';s.defer=true;document.body.appendChild(s);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',applyPortrait);else applyPortrait();
   window.addEventListener('resize',applyPortrait);
   window.addEventListener('load',()=>setTimeout(loadStaffOnce,1400),{once:true});
