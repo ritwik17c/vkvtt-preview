@@ -6,65 +6,6 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Staff Management · VKV Nalbari</title>
 <style>
-html,body{margin:0;height:100%;background:#edf6f1;font-family:system-ui,Segoe UI,Arial;color:#263d4e}
-.shell{height:100%;display:flex;flex-direction:column}
-.archivebar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:9px 14px;background:#fff;border-bottom:1px solid #cadbe4;box-shadow:0 2px 8px #17324d12;z-index:5}
-.archivebar strong{color:#17364f;margin-right:auto}.archivebar button{font:inherit;font-weight:750;border:1px solid #b8cdd8;border-radius:10px;padding:9px 12px;background:#e7f2f7;color:#17364f;cursor:pointer}.archivebar button.archive{background:#fff4dc;border-color:#d8bd77;color:#6b5114}.archivebar .note{width:100%;font-size:.78rem;color:#617685}
-iframe{display:block;width:100%;flex:1;border:0;background:#edf6f1}
-</style>
-</head>
-<body>
-<div class="shell">
-  <div class="archivebar">
-    <strong>Staff Register Views</strong>
-    <button id="showActive">Active Staff</button>
-    <button id="showInactive" class="archive">Inactive / Archived</button>
-    <div class="note">Deactivate keeps the staff record in the Staff Directory. Use “Inactive / Archived” to find it and “Activate Again” to restore it.</div>
-  </div>
-  <iframe id="staffApp" title="VKV Nalbari Staff Management" src="admin-staff-management-v6.html?v=66.3-staff-safety-fix"></iframe>
-</div>
-<script>
-(function(){
- const frame=document.getElementById('staffApp');
- const activeBtn=document.getElementById('showActive');
- const inactiveBtn=document.getElementById('showInactive');
- function innerDoc(){try{return frame.contentDocument}catch(e){return null}}
- function decorate(){
-   const d=innerDoc();if(!d)return;
-   const tabs=d.querySelector('.tabs');
-   if(tabs){tabs.style.setProperty('display','flex','important');tabs.style.setProperty('visibility','visible','important');tabs.style.setProperty('opacity','1','important');tabs.style.setProperty('min-height','44px','important')}
-   const inTab=d.querySelector('[data-filter="inactive"]');
-   if(inTab){if(inTab.textContent!=='Inactive / Archived')inTab.textContent='Inactive / Archived';inTab.style.setProperty('display','inline-block','important');inTab.style.setProperty('visibility','visible','important')}
-   const service=d.getElementById('serviceStatus');
-   if(service){[...service.options].forEach(o=>{if((o.value||o.textContent).trim()==='Local Appointment'&&o.textContent!=='LA')o.textContent='LA'})}
-   d.querySelectorAll('#list tbody tr').forEach(row=>{
-     const cells=row.querySelectorAll('td');
-     if(cells[8]&&cells[8].textContent.trim()==='Local Appointment')cells[8].textContent='LA';
-     const status=cells[13]?.textContent.trim();
-     const actions=cells[14];
-     if(status==='Inactive'&&actions&&!actions.querySelector('[data-v7-reactivate]')){
-       const edit=actions.querySelector('[data-edit]');
-       if(edit){
-         const b=d.createElement('button');b.type='button';b.textContent='Activate Again';b.setAttribute('data-v7-reactivate','1');b.style.marginLeft='4px';
-         b.onclick=()=>{edit.click();const a=d.getElementById('active'),save=d.getElementById('save');if(a&&save){a.value='true';setTimeout(()=>save.click(),80)}};
-         actions.insertBefore(b,actions.querySelector('[data-delete]')||null);
-       }
-     }
-   });
- }
- function clickFilter(name){
-   const d=innerDoc();if(!d)return;
-   const b=d.querySelector(`[data-filter="${name}"]`);
-   if(b){b.style.setProperty('display','inline-block','important');b.style.setProperty('visibility','visible','important');b.click();setTimeout(decorate,120);setTimeout(decorate,500);d.getElementById('list')?.scrollIntoView({behavior:'smooth',block:'start'})}
- }
- activeBtn.onclick=()=>clickFilter('all');
- inactiveBtn.onclick=()=>clickFilter('inactive');
- frame.addEventListener('load',()=>{
-   // Bounded refresh only: no MutationObserver, so this cannot self-trigger or freeze the page.
-   let tries=0;
-   const timer=setInterval(()=>{decorate();tries++;if(tries>=8)clearInterval(timer)},350);
- });
-})();
-</script>
-</body>
-</html>
+html,body{margin:0;height:100%;background:#edf6f1;font-family:system-ui,Segoe UI,Arial;color:#263d4e}.shell{height:100%;display:flex;flex-direction:column}.archivebar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:9px 14px;background:#fff;border-bottom:1px solid #cadbe4;box-shadow:0 2px 8px #17324d12;z-index:5}.archivebar strong{color:#17364f;margin-right:auto}.archivebar button{font:inherit;font-weight:750;border:1px solid #b8cdd8;border-radius:10px;padding:9px 12px;background:#e7f2f7;color:#17364f;cursor:pointer}.archivebar button.archive{background:#fff4dc;border-color:#d8bd77;color:#6b5114}.archivebar button.activeView{outline:3px solid #236d9922;border-color:#236d99}.archivebar .note{width:100%;font-size:.78rem;color:#617685}iframe{display:block;width:100%;flex:1;border:0;background:#edf6f1}
+</style></head><body><div class="shell"><div class="archivebar"><strong>Staff Register Views</strong><button id="showActive" class="activeView">Active Staff</button><button id="showInactive" class="archive">Inactive / Archived</button><div class="note">Deactivate keeps the staff record in the Staff Directory. Use “Inactive / Archived” to find it and “Activate Again” to restore it.</div></div><iframe id="staffApp" title="VKV Nalbari Staff Management" src="admin-staff-management-v6.html?v=66.3-staff-safety-fix-2"></iframe></div>
+<script>(function(){const frame=document.getElementById('staffApp'),activeBtn=document.getElementById('showActive'),inactiveBtn=document.getElementById('showInactive');function innerDoc(){try{return frame.contentDocument}catch(e){return null}}function setOuter(which){activeBtn.classList.toggle('activeView',which==='all');inactiveBtn.classList.toggle('activeView',which==='inactive')}function decorate(){const d=innerDoc();if(!d)return false;const tabs=d.querySelector('.tabs');if(tabs){tabs.style.setProperty('display','flex','important');tabs.style.setProperty('visibility','visible','important');tabs.style.setProperty('opacity','1','important');tabs.style.setProperty('min-height','44px','important')}const inTab=d.querySelector('[data-filter="inactive"]');if(inTab){inTab.textContent='Inactive / Archived';inTab.style.setProperty('display','inline-block','important');inTab.style.setProperty('visibility','visible','important')}const service=d.getElementById('serviceStatus');if(service)[...service.options].forEach(o=>{if((o.value||o.textContent).trim()==='Local Appointment')o.textContent='LA'});d.querySelectorAll('#list tbody tr').forEach(row=>{const cells=row.querySelectorAll('td');if(cells[8]&&cells[8].textContent.trim()==='Local Appointment')cells[8].textContent='LA';const status=cells[13]?.textContent.trim(),actions=cells[14];if(status==='Inactive'&&actions&&!actions.querySelector('[data-v7-reactivate]')){const edit=actions.querySelector('[data-edit]');if(edit){const b=d.createElement('button');b.type='button';b.textContent='Activate Again';b.setAttribute('data-v7-reactivate','1');b.style.marginLeft='4px';b.onclick=()=>{edit.click();const a=d.getElementById('active'),save=d.getElementById('save');if(a&&save){a.value='true';setTimeout(()=>save.click(),100)}};actions.insertBefore(b,actions.querySelector('[data-delete]')||null)}}});return true}function clickFilter(name){setOuter(name);let tries=0;const timer=setInterval(()=>{tries++;const d=innerDoc(),b=d&&d.querySelector(`[data-filter="${name}"]`);if(b){b.style.setProperty('display','inline-block','important');b.style.setProperty('visibility','visible','important');b.click();setTimeout(decorate,120);setTimeout(decorate,450);d.getElementById('list')?.scrollIntoView({behavior:'smooth',block:'start'});clearInterval(timer)}else if(tries>=20)clearInterval(timer)},120)}activeBtn.onclick=()=>clickFilter('all');inactiveBtn.onclick=()=>clickFilter('inactive');frame.addEventListener('load',()=>{let tries=0;const timer=setInterval(()=>{decorate();if(++tries>=12)clearInterval(timer)},250)});})();</script></body></html>
