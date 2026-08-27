@@ -1,6 +1,6 @@
 /*
 VKV Nalbari Timetable — Cloud v66.4 Dashboard Add-on
-Adds Quick Add Leave and dedicated Staff Management.
+Adds Quick Add Leave, dedicated Staff Management and Question Bank Administration.
 */
 (() => {
   const VERSION='66.0-leave-fix-1';
@@ -22,6 +22,10 @@ Adds Quick Add Leave and dedicated Staff Management.
     if(!document.getElementById('v663StaffManagementTile')){
       const staff=document.createElement('div');staff.className='tile';staff.id='v663StaffManagementTile';staff.style.cssText='background:linear-gradient(145deg,#eef8ff,#edf8f2);border-color:#91bfd0';staff.innerHTML='<b>👥 Staff Management</b><span>Timetable-safe staff directory with Employee Code, optional Teacher Short Name, separate Academic / Professional Qualifications, service details, inactive archive access and full extended Excel round-trip import/export.</span>';
       const teachers=[...tiles.querySelectorAll('.tile')].find(x=>/Teachers\s*&\s*Workload/i.test(x.textContent||''));if(teachers)teachers.insertAdjacentElement('beforebegin',staff);else tiles.appendChild(staff);staff.onclick=()=>location.href='admin-staff-management-v7.html?v=66.4-staff-role-fix';
+    }
+    if(!document.getElementById('vkvQuestionBankAdminTile')){
+      const qb=document.createElement('div');qb.className='tile';qb.id='vkvQuestionBankAdminTile';qb.style.cssText='background:linear-gradient(145deg,#eef8ff,#f7f1ff);border-color:#9fb9d8';qb.innerHTML='<b>📚 Question Bank Administration</b><span>Principal control centre for teacher submissions, Subject Coordinator assignments, verification workflow, class/subject/teacher filters, leaderboard, awards, templates and exports.</span>';
+      const integrity=document.getElementById('openTimetableIntegrity');if(integrity)integrity.insertAdjacentElement('beforebegin',qb);else tiles.appendChild(qb);qb.onclick=()=>location.href='admin-question-bank.html?v=preview2-qb-1';
     }
     if(!document.getElementById('v64QuickLeaveTile')){
       const quick=document.createElement('div');quick.className='tile';quick.id='v64QuickLeaveTile';quick.style.cssText='background:#eef8ff;border-color:#a9cfe2';quick.innerHTML='<b>➕ Quick Add Leave</b><span>Add an individual Date Row or Date-Range Row directly from the Admin Dashboard.</span>';
