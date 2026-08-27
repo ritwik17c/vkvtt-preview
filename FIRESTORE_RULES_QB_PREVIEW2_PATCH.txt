@@ -1,0 +1,105 @@
+// VKVTT Preview 2 — Question Bank & Paper Builder Firestore patch
+// Add these helper functions inside match /databases/{database}/documents,
+// alongside the existing helper functions, BEFORE the collection matches.
+
+function qbCoordinatorFor(subject) {
+  let cfg = get(/databases/$(database)/documents/qbConfig/current);
+  let all = cfg.data.get('coordinators', {});
+  let list = all.get(subject, []);
+  return uidActive() && (
+    (list.size() > 0 && list[0].get('uid', '') == request.auth.uid) ||
+    (list.size() > 1 && list[1].get('uid', '') == request.auth.uid) ||
+    (list.size() > 2 && list[2].get('uid', '') == request.auth.uid) ||
+    (list.size() > 3 && list[3].get('uid', '') == request.auth.uid) ||
+    (list.size() > 4 && list[4].get('uid', '') == request.auth.uid)
+  );
+}
+
+function qbOwnerImmutable() {
+  return request.resource.data.teacherUid == resource.data.teacherUid
+         && request.resource.data.teacherEmail == resource.data.teacherEmail
+         && request.resource.data.teacherCode == resource.data.teacherCode
+         && request.resource.data.createdAtMs == resource.data.createdAtMs;
+}
+
+function qbOwnerEdit() {
+  return uidActive()
+         && resource.data.teacherUid == request.auth.uid
+         && resource.data.status in ['draft', 'returned']
+         && request.resource.data.status in ['draft', 'submitted']
+         && qbOwnerImmutable()
+         && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+           'verifiedAt','verifiedAtMs','verifiedByUid','verifiedByEmail','verifiedByName',
+           'returnedAt','returnedAtMs','returnedByUid','returnedByName'
+         ]);
+}
+
+function qbCoordinatorDecision() {
+  return qbCoordinatorFor(resource.data.subject)
+         && resource.data.status == 'submitted'
+         && request.resource.data.status in ['approved', 'returned']
+         && qbOwnerImmutable()
+         && request.resource.data.questionText == resource.data.questionText
+         && request.resource.data.className == resource.data.className
+         && request.resource.data.subject == resource.data.subject
+         && request.resource.data.chapter == resource.data.chapter
+         && request.resource.data.marks == resource.data.marks
+         && request.resource.data.questionType == resource.data.questionType
+         && request.resource.data.difficulty == resource.data.difficulty;
+}
+
+// Add these collection matches BEFORE the final deny-all match /{document=**}.
+
+match /qbConfig/{documentId} {
+  allow read: if canReadSchool();
+  allow create, update, delete: if isAdmin();
+}
+
+match /qbQuestions/{questionId} {
+  allow get, list: if isAdmin()
+                   || (uidActive()
+                       && (resource.data.teacherUid == request.auth.uid
+                           || resource.data.status == 'approved'
+                           || qbCoordinatorFor(resource.data.subject)));
+
+  allow create: if uidActive()
+                && request.resource.data.teacherUid == request.auth.uid
+                && request.resource.data.status in ['draft', 'submitted']
+                && request.resource.data.questionId == questionId
+                && !request.resource.data.keys().hasAny([
+                  'verifiedAt','verifiedAtMs','verifiedByUid','verifiedByEmail','verifiedByName',
+                  'returnedAt','returnedAtMs','returnedByUid','returnedByName'
+                ]);
+
+  allow update: if isAdmin() || qbOwnerEdit() || qbCoordinatorDecision();
+
+  allow delete: if isAdmin()
+                || (uidActive()
+                    && resource.data.teacherUid == request.auth.uid
+                    && resource.data.status == 'draft');
+}
+
+match /qbTemplates/{templateId} {
+  allow read: if uidActive();
+  allow create, update, delete: if isAdmin();
+}
+
+match /qbPapers/{paperId} {
+  allow get, list: if isAdmin()
+                   || (uidActive() && resource.data.teacherUid == request.auth.uid);
+  allow create: if uidActive()
+                && request.resource.data.teacherUid == request.auth.uid;
+  allow update, delete: if isAdmin()
+                        || (uidActive() && resource.data.teacherUid == request.auth.uid);
+}
+
+match /qbAwards/{awardId} {
+  allow read, create, update, delete: if isAdmin();
+}
+
+// Notes:
+// 1. This patch deliberately does NOT add any broad catch-all permission.
+// 2. Coordinator authority is subject-scoped and derived from qbConfig/current.
+// 3. Up to five coordinators per subject are supported by this first preview rule.
+// 4. A coordinator may decide a submitted question but may not rewrite its academic content during approval.
+// 5. Teacher ownership fields remain immutable after creation.
