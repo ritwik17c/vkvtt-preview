@@ -25,7 +25,7 @@ Adds Quick Add Leave, dedicated Staff Management and Question Bank Administratio
     }
     if(!document.getElementById('vkvQuestionBankAdminTile')){
       const qb=document.createElement('div');qb.className='tile';qb.id='vkvQuestionBankAdminTile';qb.style.cssText='background:linear-gradient(145deg,#eef8ff,#f7f1ff);border-color:#9fb9d8';qb.innerHTML='<b>📚 Question Bank Administration</b><span>Principal control centre for teacher submissions, Subject Coordinator assignments, verification workflow, class/subject/teacher filters, leaderboard, awards, templates and exports.</span>';
-      const integrity=document.getElementById('openTimetableIntegrity');if(integrity)integrity.insertAdjacentElement('beforebegin',qb);else tiles.appendChild(qb);qb.onclick=()=>location.href='admin-question-bank.html?v=preview2-qb-1';
+      const integrity=document.getElementById('openTimetableIntegrity');if(integrity)integrity.insertAdjacentElement('beforebegin',qb);else tiles.appendChild(qb);qb.onclick=()=>location.href='admin-question-bank-v2.html?v=preview2-qb-3';
     }
     if(!document.getElementById('v64QuickLeaveTile')){
       const quick=document.createElement('div');quick.className='tile';quick.id='v64QuickLeaveTile';quick.style.cssText='background:#eef8ff;border-color:#a9cfe2';quick.innerHTML='<b>➕ Quick Add Leave</b><span>Add an individual Date Row or Date-Range Row directly from the Admin Dashboard.</span>';
